@@ -4,19 +4,34 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
-  <script>
-    // Función para cifrar con DES
-    function encryptDES(message, key) {
-      var encrypted = CryptoJS.DES.encrypt(message, key).toString();
-      window.ReactNativeWebView.postMessage(encrypted); // Envía resultado a Thunkable
-    }
+<script>
+  // Función para cifrar con DES
+  function encryptDES(message, key) {
+    var encrypted = CryptoJS.DES.encrypt(message, key).toString();
+    window.ReactNativeWebView.postMessage(encrypted);
+  }
 
-    // Función para descifrar con DES
-    function decryptDES(ciphertext, key) {
-      var decrypted = CryptoJS.DES.decrypt(ciphertext, key);
-      var originalText = decrypted.toString(CryptoJS.enc.Utf8);
-      window.ReactNativeWebView.postMessage(originalText); // Envía resultado a Thunkable
+  // Función para descifrar con DES
+  function decryptDES(ciphertext, key) {
+    var decrypted = CryptoJS.DES.decrypt(ciphertext, key);
+    var originalText = decrypted.toString(CryptoJS.enc.Utf8);
+    window.ReactNativeWebView.postMessage(originalText);
+  }
+
+  // Escuchar mensajes desde Thunkable
+  window.addEventListener("message", function(event) {
+    let data = event.data;
+    let parts = data.split(":");
+    let action = parts[0];
+    let message = parts[1];
+    let key = parts[2];
+
+    if (action === "ENCRYPT") {
+      encryptDES(message, key);
+    } else if (action === "DECRYPT") {
+      decryptDES(message, key);
     }
-  </script>
+  });
+</script>
 </body>
 </html>
