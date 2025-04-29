@@ -2,36 +2,59 @@
 <html>
 <head>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/des.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pad-pkcs7.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/mode-ecb.js"></script>
 </head>
 <body>
-<script>
-  // Función para cifrar con DES
-  function encryptDES(message, key) {
-    var encrypted = CryptoJS.DES.encrypt(message, key).toString();
-    window.ReactNativeWebView.postMessage(encrypted);
-  }
-
-  // Función para descifrar con DES
-  function decryptDES(ciphertext, key) {
-    var decrypted = CryptoJS.DES.decrypt(ciphertext, key);
-    var originalText = decrypted.toString(CryptoJS.enc.Utf8);
-    window.ReactNativeWebView.postMessage(originalText);
-  }
-
-  // Escuchar mensajes desde Thunkable
-  window.addEventListener("message", function(event) {
-    let data = event.data;
-    let parts = data.split(":");
-    let action = parts[0];
-    let message = parts[1];
-    let key = parts[2];
-
-    if (action === "ENCRYPT") {
-      encryptDES(message, key);
-    } else if (action === "DECRYPT") {
-      decryptDES(message, key);
+  <script>
+    // Función para cifrar con DES (modo ECB y padding PKCS7)
+    function encryptDES(message, key) {
+      try {
+        const encrypted = CryptoJS.DES.encrypt(message, key, {
+          mode: CryptoJS.mode.ECB,
+          padding: CryptoJS.pad.Pkcs7
+        }).toString();
+        window.ReactNativeWebView.postMessage(encrypted);
+      } catch (error) {
+        window.ReactNativeWebView.postMessage("ENCRYPT_ERROR:" + error.message);
+      }
     }
-  });
-</script>
+
+    // Función para descifrar con DES (modo ECB y padding PKCS7)
+    function decryptDES(ciphertext, key) {
+      try {
+        const decrypted = CryptoJS.DES.decrypt(ciphertext, key, {
+          mode: CryptoJS.mode.ECB,
+          padding: CryptoJS.pad.Pkcs7
+        });
+        const originalText = decrypted.toString(CryptoJS.enc.Utf8);
+        window.ReactNativeWebView.postMessage(originalText);
+      } catch (error) {
+        window.ReactNativeWebView.postMessage("DECRYPT_ERROR:" + error.message);
+      }
+    }
+
+    // Escuchar mensajes desde Thunkable
+    window.addEventListener("message", function(event) {
+      let data = event.data;
+      let parts = data.split(":");
+      if (parts.length >= 3) {
+        let action = parts[0];
+        let message = parts[1];
+        let key = parts[2];
+
+        if (action === "ENCRYPT") {
+          encryptDES(message, key);
+        } else if (action === "DECRYPT") {
+          decryptDES(message, key);
+        } else {
+          window.ReactNativeWebView.postMessage("ERROR:Acción no válida");
+        }
+      } else {
+        window.ReactNativeWebView.postMessage("ERROR:Formato de mensaje incorrecto");
+      }
+    });
+  </script>
 </body>
 </html>
